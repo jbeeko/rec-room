@@ -1,10 +1,10 @@
 #!/bin/bash
 
-@echo off
-cls
+# @echo off
+# cls
 
-set nuget-key=oy2gbbyumnd3vgf2j2wqshhuuspstb3evb2bhh3waluzey
-set github-user=jbeeko
-set github-pw=1MixedMess..
+# set nuget-key=oy2gbbyumnd3vgf2j2wqshhuuspstb3evb2bhh3waluzey
+# set github-user=jbeeko
+#set github-pw=1MixedMess..
 
 dotnet fake -v build --target Release
