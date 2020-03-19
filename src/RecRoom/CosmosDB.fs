@@ -21,8 +21,7 @@ module DocDB =
 
     let dbClient = new CosmosClient(Settings.CosmoDB.connectionString, options)
 
-    // The account will have been created by the template.
-    // Initialize the database and the single container private to the Seymour system
+    // Lazy create the DB
     dbClient.CreateDatabaseIfNotExistsAsync(dbName).Wait()
 
     let escapeSqlParamPath (paramPath:string) (prefix:string) =

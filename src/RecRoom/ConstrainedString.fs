@@ -3,7 +3,7 @@
 
 open System.Text.RegularExpressions
 
-open Transactive.Seymour.Util.SerializationSupport
+open SerializationSupport
 
 module ConstrainedString =
 
