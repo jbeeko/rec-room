@@ -5,7 +5,15 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Library.fs" />
+    <Compile Include="Settings.fs" />
+    <Compile Include="Repository.fs" />
+    <Compile Include="ReflectionSupport.fs" />
+    <Compile Include="QueryHelpers.fs" />
+    <Compile Include="SerializationSupport.fs" />
+    <Compile Include="Identifiers.fs" />
+    <Compile Include="Logger.fs" />
+    <Compile Include="CosmosDB.fs" />
+    <Compile Include="RecRoom.fs" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

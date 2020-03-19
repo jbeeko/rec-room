@@ -21,7 +21,7 @@ let project = "RecRoom"
 
 let summary = ""
 
-let gitOwner = "TODO: ADD_AUTHOR"
+let gitOwner = "jbeeko"
 let gitName = "RecRoom"
 let gitHome = "https://github.com/" + gitOwner
 

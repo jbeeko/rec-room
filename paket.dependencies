@@ -8,6 +8,12 @@ nuget Expecto
 nuget FsCheck 2.14.0
 nuget Expecto.FsCheck
 
+nuget Microsoft.Azure.Cosmos              #CosmosDB obviously
+nuget Newtonsoft.Json                     #Use some custom serialization
+nuget System.Runtime.Extensions           #Environment.GetEnvironmentVariable
+nuget Microsoft.Extensions.Logging        #ILogger interface
+
+
 group Docs
   source https://api.nuget.org/v3/index.json
 
