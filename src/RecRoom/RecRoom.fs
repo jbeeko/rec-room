@@ -25,7 +25,7 @@ type DeleteResult<'T> =
 exception DomainConstrainViolation of string
 
 
-module DocDbRepository =
+module RecRoom =
 
     type ContainerId = ContainerId of string with
         interface IId
@@ -40,7 +40,7 @@ module DocDbRepository =
         anObj.GetType().GetProperty("id").GetValue(anObj, null)
 
     let tryGet<'T> (id: obj) (conId: ContainerId) (partKey: string option) (log:ILogger): Option<'T> =
-        match (DocDB.get<'T> conId partKey id) with
+        match (CosmosDB.get<'T> conId partKey id) with
         | Some entity -> Some entity
         | None ->
             let docType = typedefof<'T>.Name
@@ -59,7 +59,7 @@ module DocDbRepository =
             | None ->
                 let docType = typedefof<'T>.Name
                 sprintf "SELECT VALUE doc FROM doc WHERE doc._type = '%s'"  docType
-        DocDB.query<'T> conId partKey sql conditions
+        CosmosDB.query<'T> conId partKey sql conditions
 
     let queryAll<'T> (conditions : QueryCondition list) (conId: ContainerId) (log: ILogger) (querySql: string option): 'T List =
         query<'T> conditions conId None log querySql
@@ -78,10 +78,10 @@ module DocDbRepository =
             DomainConstrainViolation exceptionMsg |> raise
 
     let queryValue<'T> (conId: ContainerId) (partKey: string option) (sql: string) (conditions : QueryCondition list) =
-        DocDB.queryValue<'T> conId partKey sql conditions
+        CosmosDB.queryValue<'T> conId partKey sql conditions
 
     let insert<'T> (entity: 'T) (conId: ContainerId) (partKey: string option) (log: ILogger) : InsertResult<'T> =
-        match DocDB.tryInsert conId partKey entity with
+        match CosmosDB.tryInsert conId partKey entity with
         | Some item ->
             //let docType = typedefof<'T>.Name
             //let id = getId item
@@ -93,7 +93,7 @@ module DocDbRepository =
     let update<'T> (entity: 'T) (conId: ContainerId) (partKey: string option) (log:ILogger) : UpdateResult<'T> =
         let id = getId entity
         try
-            DocDB.upsert conId partKey entity
+            CosmosDB.upsert conId partKey entity
             //let docType = typedefof<'T>.Name
             //log.Info (sprintf "%s with id %s was updated in invocation %s of function %s." docType (id.ToString()) log.InvocationId log.FunctionName)
             Updated
@@ -117,7 +117,7 @@ module DocDbRepository =
                 )
             |> List.toArray
         try
-            DocDB.executeStoredProcedure conId partKey "updateEntites" [| ents |] |> ignore
+            CosmosDB.executeStoredProcedure conId partKey "updateEntites" [| ents |] |> ignore
         with
         | _  -> raise ConcurrencyException
         ()
@@ -127,7 +127,7 @@ module DocDbRepository =
             entities
             |> List.map box
             |> List.toArray
-        DocDB.executeStoredProcedure conId partKey "insertEntites" [| ents |] |> ignore
+        CosmosDB.executeStoredProcedure conId partKey "insertEntites" [| ents |] |> ignore
 
     let updateUoW<'T> (entity: 'T) (conId: ContainerId) (partKey: string option) (log:ILogger) : UpdateResult<'T> =
         let entities = [(box entity)]
@@ -143,14 +143,14 @@ module DocDbRepository =
             reraise()
 
     let upsert<'T> (entity: 'T) (conId: ContainerId) (partKey: string option) (log:ILogger) : UpdateResult<'T> =
-        DocDB.upsert conId partKey entity
+        CosmosDB.upsert conId partKey entity
         //let id = getId entity
         //let docType = typedefof<'T>.Name
         //log.Info (sprintf "%s with id %s was upserted in invocation %s of function %s." docType (id.ToString()) log.InvocationId log.FunctionName)
         Updated
 
     let delete<'T> (id: obj) (conId: ContainerId) (partKey: string option) (log:ILogger) : DeleteResult<'T> =
-        match (DocDB.delete conId partKey id) with
+        match (CosmosDB.delete conId partKey id) with
         | Some _ ->
             //let docType = typedefof<'T>.Name
             //log.Info (sprintf "%s with id %s was deleted in invocation %s of function %s." docType (id.ToString()) log.InvocationId log.FunctionName)

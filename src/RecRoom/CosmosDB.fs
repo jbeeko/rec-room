@@ -11,7 +11,7 @@ open SerializationSupport
 open QueryHelpers
 open Newtonsoft.Json.Linq
 
-module DocDB =
+module CosmosDB =
 
     let dbName = Settings.CosmoDB.dbName
 
