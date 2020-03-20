@@ -14,6 +14,8 @@ module Settings =
 
 
     module CosmoDB =
-        let dbName = getEnvironmentVariable "_DBName"
-        let connectionString = getEnvironmentVariable "_CosmosDBConnectionString"
+        let connectionString = "AccountEndpoint=https://rec-room.documents.azure.com:443/;AccountKey=InEFZM1kVX3xxH9UxpHTc2ckYnwylZDshtbDvdToPJ7bguqli4kM2xSXpw4DTDxmQhVGxPn1wFa5J1rhCE1P6Q==;"
+        let dbName = getEnvironmentVariable "RecRoomDB"
+        // let dbName = getEnvironmentVariable "_DBName"
+        // let connectionString = getEnvironmentVariable "_CosmosDBConnectionString"
 
