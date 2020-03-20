@@ -1,0 +1,6 @@
+FSharp.Core
+
+nuget Newtonsoft.Json
+nuget Microsoft.Azure.Cosmos
+System.Runtime.Extensions
+Microsoft.Extensions.Logging

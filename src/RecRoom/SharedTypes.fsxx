@@ -1,0 +1,184 @@
+namespace RecRoom
+
+open System
+open System.Reflection
+open System.Text.RegularExpressions
+open Microsoft.FSharp.Reflection
+
+open ConstrainedString
+open Identifiers
+open ReflectionSupport
+
+type ContainerId = ContainerId of string with
+    interface IId
+    static member IdLength = IdLength.Len4
+    override this.ToString() = match this with ContainerId s -> s
+
+
+
+
+type Hash = Hash of string with
+    override this.ToString() = value this
+
+    interface IConstrainedString with
+        member this.Value = let (Hash s) = this in s
+
+    static member HashValid (hash:string) =
+        let alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        (hash.Length = 22) &&
+        String.forall (fun c -> alphabet.Contains(c.ToString())) hash
+
+    static member FromString(input) = create id Hash.HashValid Hash input
+    static member New () = Hash (Identifiers.unseededId(IdLength.Max))
+
+
+
+type PublicKey = PublicKey of string with
+    override this.ToString() = value this
+
+    interface IConstrainedString with
+        member this.Value = let (PublicKey k) = this in k
+
+    static member RemoveMarkers(key: string) = key.Replace("-----BEGIN PUBLIC KEY-----", "").Replace("-----END PUBLIC KEY-----", "")
+
+    static member FromString(input) = create (PublicKey.RemoveMarkers >> removeWhitespace) (lengthBetweenValidator 50 65535) PublicKey input
+
+
+
+
+
+type OrgId = OrgId of string with
+    interface IId
+    static member IdLength = IdLength.Len4
+    static member New() = OrgId (Identifiers.unseededId OrgId.IdLength)
+    override this.ToString() = match this with OrgId s -> s
+    member this.Value = this.ToString()
+
+[<Newtonsoft.Json.JsonConverter(typeof<InstructingPartyConverter>)>]
+type InstructingParty =
+| Organization of OrgId
+| ClearingSystem of ClearingSystem
+
+and private InstructingPartyConverter() =
+    inherit Newtonsoft.Json.JsonConverter()
+
+    override _x.CanConvert(t:System.Type) = true
+
+    override _x.WriteJson(writer, value, serializer) =
+        match value :?> InstructingParty with
+        | Organization o -> serializer.Serialize(writer, sprintf "Organization:%s" (o.ToString()))
+        | ClearingSystem c -> serializer.Serialize(writer, sprintf "ClearingSystem:%A" c)
+
+        override _x.ReadJson(reader, t, _existingValue, serializer) =
+        let str = serializer.Deserialize<string> reader
+        try
+            match str.Split([|':'|], 2) with
+            | [| "Organization"; o |] -> Organization (OrgId o) :> obj
+            | [| "ClearingSystem"; c |] ->
+                match ClearingSystem.FromString c with
+                | Some c -> ClearingSystem c :> obj
+                | None -> failwithf "Unrecognized ClearingSystem: %A" c
+            | x -> failwithf "Unrecognized InstructingParty: %A" x
+        with
+        | _ -> raise <| SerializationSupport.DeserializationException(t, str, reader.Path)
+
+      override _x.CanRead = true
+      override _x.CanWrite = true
+
+type AccountId = MakeAccountId of string with
+    interface IId
+    static member New (orgId: OrgId) (iban: Iban) =
+        MakeAccountId (orgId.ToString() + seededId (iban.ToString()) IdLength.Len12)
+    member this.orgId = OrgId (this.ToString().Substring(0,int OrgId.IdLength))
+    override this.ToString() = match this with MakeAccountId s -> s
+
+type AccountBlockId = MakeAccountBlockId of string with
+    interface IId
+    static member New(acct:Iban) (collId: ContainerId) = MakeAccountBlockId (collId.ToString() + seededId (acct.ToString())  IdLength.Len12)
+    member this.orgId = OrgId (this.ToString().Substring(0,int OrgId.IdLength))
+    override this.ToString() = match this with MakeAccountBlockId s -> s
+
+type AccountWhitelistId = MakeAccountWhitelistId of string with
+    interface IId
+    static member New(orgId: OrgId) = MakeAccountWhitelistId (orgId.ToString() + unseededId(IdLength.Len12))
+    member this.orgId = OrgId (this.ToString().Substring(0,int OrgId.IdLength))
+    override this.ToString() = match this with MakeAccountWhitelistId s -> s
+
+type ContactId = MakeContactId of string with
+    interface IId
+    static member New (orgId: OrgId) = MakeContactId (orgId.ToString() + unseededId(IdLength.Len12))
+    member this.orgId = OrgId (this.ToString().Substring(0,int OrgId.IdLength))
+    override this.ToString() = match this with MakeContactId s -> s
+
+type PaymentId = MakePaymentId of string with
+    interface IId
+    static member New (orgId: OrgId) (instPrty: InstructingParty) (instId:InstructionId) =
+        let seed = instPrty.ToString() + instId.ToString()
+        MakePaymentId (orgId.ToString() + seededId seed IdLength.Max)
+    member this.orgId = OrgId (this.ToString().Substring(0,int OrgId.IdLength))
+    override this.ToString() = match this with MakePaymentId s -> s
+
+type BatchId = MakeBatchId of string with
+    interface IId
+    static member New (orgId: OrgId) (bId: string)  =
+        MakeBatchId (orgId.ToString() + seededId (bId:string) IdLength.Max )
+    member this.orgId = OrgId (this.ToString().Substring(0,int OrgId.IdLength))
+    override this.ToString() = match this with MakeBatchId s -> s
+
+type EventId = EventId of string with
+    interface IId
+    static member New(orgId: OrgId) = EventId (orgId.ToString() + Identifiers.guidId())
+    member this.orgId = OrgId (this.ToString().Substring(0,int OrgId.IdLength))
+    override this.ToString() = match this with EventId s -> s
+
+type EntryId = EntryId of string with
+    interface IId
+    static member New(orgId: OrgId) = EntryId (orgId.ToString() + Identifiers.guidId())
+    member this.orgId = OrgId (this.ToString().Substring(0,int OrgId.IdLength))
+    override this.ToString() = match this with EntryId s -> s
+
+type IPWhitelistId = IPWhitelistId of string with
+    interface IId
+    static member New(orgId: OrgId) = IPWhitelistId (orgId.ToString() + unseededId(IdLength.Len12))
+    member this.orgId = OrgId (this.ToString().Substring(0,int OrgId.IdLength))
+    override this.ToString() = match this with IPWhitelistId s -> s
+
+type PhoneNumber = PhoneNumber of string with
+    override this.ToString() = value this
+    interface IConstrainedString with
+        member this.Value = let (PhoneNumber s) = this in s
+    static member FromString(input) =
+        create
+            (fun s -> String.filter (fun c -> Char.IsDigit(c) || c = ' ' || c = '+' ) s)
+            (fun s -> Regex.IsMatch(s, "^\+\d{1,4} [\d ]{5,}$"))
+            PhoneNumber input
+
+    static member FromParts (countryCode, number) =
+        PhoneNumber ("+"+countryCode+" "+number)
+
+    member this.Number =
+        let str = this.ToString ()
+        let str = str.Split ' '
+        str.[1 ..] |> String.concat " "
+
+    member this.CountryCode =
+        let str = this.ToString ()
+        let str = str.Split ' '
+        str.[0].TrimStart('+')
+
+type ApplicationId = ApplicationId of string with
+    interface IId
+    static member New(orgId: OrgId) = ApplicationId (guidId())
+    member this.orgId = OrgId (this.ToString().Substring(0,int OrgId.IdLength))
+    override this.ToString() = match this with ApplicationId s -> s
+
+
+type AccountProviderId = MakeAccountProviderId of string with
+    interface IId
+    override this.ToString() = match this with MakeAccountProviderId s -> s
+
+type FundHeldHow =
+    | NoFundsHeld
+    | LiquidityAccount
+    | IndividualFunds
+

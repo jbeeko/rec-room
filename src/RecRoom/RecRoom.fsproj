@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Settings.fs" />
+    <Compile Include="ReflectionSupport.fs" />
+    <Compile Include="QueryHelpers.fs" />
+    <Compile Include="SerializationSupport.fs" />
+    <Compile Include="Identifiers.fs" />
+    <Compile Include="Logger.fs" />
+    <Compile Include="CosmosDB.fs" />
+    <Compile Include="RecRoom.fs" />
+  </ItemGroup>
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
+</Project>
