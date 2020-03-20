@@ -22,7 +22,7 @@ let project = "RecRoom"
 let summary = ""
 
 let gitOwner = "jbeeko"
-let gitName = "RecRoom"
+let gitName = "rec-room"
 let gitHome = "https://github.com/" + gitOwner
 
 // --------------------------------------------------------------------------------------
